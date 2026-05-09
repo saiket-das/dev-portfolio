@@ -1,188 +1,232 @@
 "use client";
 
-import { useMemo } from "react";
-import { POSTS, PROFILE } from "@/lib/data";
-import { PostCard } from "./PostCards";
-import { Avatar, Placeholder, Asterism, Icon } from "./primitives";
+import { useState } from "react";
+import { FEED, FeedPost } from "@/lib/data";
+import { Ico, Av, Ph, Verified } from "./primitives";
 
-function Bento({
-  onOpen,
-  avatarStyle,
-}: {
-  onOpen: (id: string) => void;
-  avatarStyle: string;
-}) {
-  const featured = POSTS.find((p) => p.id === "p07")!;
+const FILTERS = [
+  { k: "all",       label: "All" },
+  { k: "career",    label: "Career" },
+  { k: "project",   label: "Projects" },
+  { k: "media",     label: "Photography" },
+  { k: "thought",   label: "Thoughts" },
+  { k: "code",      label: "Code" },
+  { k: "hackathon", label: "Hackathons" },
+  { k: "thread",    label: "Threads" },
+];
+
+function PostBody({ post }: { post: FeedPost }) {
   return (
-    <section className="bento">
-      <div className="bento-hero">
-        <div className="bento-hero-mark mono">
-          <span className="dot-live" /> LIVE FROM LISBON · 38.72°N
-        </div>
-        <h1 className="bento-hero-h serif">
-          I make <em>software</em> and <em>photographs</em>,
-          <br />
-          mostly at the <span className="hi-accent">seam</span> between them.
-        </h1>
-        <div className="bento-hero-foot">
-          <div className="bento-hero-handle mono">
-            <Avatar size={28} style={avatarStyle} />
-            <span>{PROFILE.handle}</span>
-            <span className="dot-sep">/</span>
-            <span>est. 2021</span>
-          </div>
-          <div className="bento-hero-cta mono">
-            <button>read about me</button>
-            <button className="primary">
-              latest work <Icon name="arrow" className="ico-xs" />
-            </button>
-          </div>
-        </div>
-      </div>
+    <>
+      {post.title && <h3 className="post2-title">{post.title}</h3>}
+      {post.body  && <p className="post2-body">{post.body}</p>}
 
-      <div className="bento-now">
-        <div className="bento-card-head mono">
-          <span className="dot-pulse" />
-          NOW WORKING ON
-        </div>
-        <div className="bento-now-title serif">
-          Loomshell <span className="bento-ver mono">v0.3</span>
-        </div>
-        <p className="bento-now-body">
-          A Rust CLI that stitches N webcam feeds into one syncopated timelapse.
-          Audio-reactive in the next release.
-        </p>
-        <div className="bento-now-progress">
-          <div className="bento-now-bar">
-            <i style={{ width: "62%" }} />
+      {post.type === "code" && post.code && (
+        <div className="atch-code">
+          <div className="atch-code-head">
+            <span className="atch-code-dot" />
+            <span className="mono">{post.lang}</span>
           </div>
-          <span className="mono">v0.3 · 62%</span>
+          <pre><code>{post.code}</code></pre>
         </div>
-      </div>
+      )}
 
-      <div className="bento-feat" onClick={() => onOpen(featured.id)}>
-        <Placeholder
-          label="atlas / 12k photos"
-          aspect="3/2"
-          className="bento-feat-img"
-        />
-        <div className="bento-feat-tag mono">FEATURED CASE STUDY</div>
-        <h3 className="bento-feat-title serif">
-          An atlas of every frame I&apos;ve ever shot.
-        </h3>
-        <div className="bento-feat-cta mono">
-          5 parts · 6 min read <Icon name="arrow" className="ico-xs" />
+      {post.type === "media" && post.media && (
+        <div className="atch-media" data-n={String(post.media.length)}>
+          {post.media.map((m, i) => <Ph key={i} label={m.label} />)}
         </div>
-      </div>
+      )}
 
-      <div className="bento-stats">
-        <div className="bento-card-head mono">⟶ THE NUMBERS</div>
-        <div className="bento-stats-grid">
-          <div>
-            <b className="serif">23</b>
-            <span className="mono">things shipped</span>
-          </div>
-          <div>
-            <b className="serif">84</b>
-            <span className="mono">rolls of film</span>
-          </div>
-          <div>
-            <b className="serif">12k</b>
-            <span className="mono">frames archived</span>
-          </div>
-          <div>
-            <b className="serif">3</b>
-            <span className="mono">years in CS</span>
+      {post.type === "project" && post.project && (
+        <div className="atch-project">
+          <Ph label={post.project.cover} />
+          <div className="atch-project-meta">
+            <span className="atch-project-name">{post.project.name}</span>
+            <p className="atch-project-desc">{post.project.desc}</p>
+            <div className="atch-project-stack">
+              {post.project.stack.map((s) => <span key={s}>{s}</span>)}
+            </div>
+            {post.project.stats && (
+              <div className="atch-project-stats">
+                {post.project.stats.map((s) => (
+                  <div key={s.k}>
+                    <div className="atch-project-stat-v">{s.v}</div>
+                    <div className="atch-project-stat-k">{s.k}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {post.project.links && (
+              <div className="atch-project-links">
+                {post.project.links.map((l) => (
+                  <a key={l.k} className="atch-project-link" href="#" onClick={(e) => e.preventDefault()}>
+                    <Ico name={l.k === "github" ? "github" : "link"} style={{ width: 14, height: 14 }} />
+                    <span>{l.l}</span>
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      )}
 
-      <div className="bento-marquee">
-        <div className="bento-marquee-track mono">
-          <span>RUST</span>
-          <span>·</span>
-          <span>CLIP</span>
-          <span>·</span>
-          <span>PORTRA 400</span>
-          <span>·</span>
-          <span>PGVECTOR</span>
-          <span>·</span>
-          <span>K1000</span>
-          <span>·</span>
-          <span>WEBGL</span>
-          <span>·</span>
-          <span>SLOW FILM</span>
-          <span>·</span>
-          <span>FFMPEG</span>
-          <span>·</span>
-          <span>RAG</span>
-          <span>·</span>
-          <span>DARKROOM</span>
-          <span>·</span>
-          <span>RUST</span>
-          <span>·</span>
-          <span>CLIP</span>
-          <span>·</span>
-          <span>PORTRA 400</span>
-          <span>·</span>
-          <span>PGVECTOR</span>
-          <span>·</span>
-          <span>K1000</span>
-          <span>·</span>
-          <span>WEBGL</span>
-          <span>·</span>
+      {post.type === "thread" && post.cover && (
+        <div className="atch-project">
+          <Ph label={post.cover} />
         </div>
-      </div>
-    </section>
+      )}
+
+      {post.type === "hackathon" && post.hack && (
+        <div className="atch-hack">
+          <div className="atch-hack-row">
+            <span className="atch-hack-name">{post.hack.name}</span>
+            <span className="atch-hack-pl">{post.hack.placement}</span>
+          </div>
+          <div className="atch-hack-meta">
+            <span>w/ {post.hack.teammates.join(", ")}</span>
+            <span>·</span>
+            <span>{post.hack.stack.join(" + ")}</span>
+          </div>
+        </div>
+      )}
+
+      {post.type === "career" && post.company && (
+        <div className="atch-career">
+          <div className="atch-career-logo">{post.company.charAt(0)}</div>
+          <div>
+            <div className="atch-career-name">{post.company}</div>
+            <div className="atch-career-role">Software Engineering Intern · Starting soon</div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
-export function HomePage({
-  density,
-  activeTag,
-  onOpen,
-  onTag,
-  avatarStyle,
+function Post2({
+  post, liked, saved, onLike, onSave, onTag,
 }: {
-  density: string;
-  activeTag: string | null;
-  onOpen: (id: string) => void;
-  onTag: (tag: string | null) => void;
-  avatarStyle: string;
+  post: FeedPost;
+  liked: boolean; saved: boolean;
+  onLike: (id: string) => void;
+  onSave: (id: string) => void;
+  onTag: (t: string) => void;
 }) {
-  const filtered = useMemo(
-    () => (activeTag ? POSTS.filter((p) => p.tags.includes(activeTag)) : POSTS),
-    [activeTag],
-  );
+  const kindLabel: Record<string, string> = {
+    career: "career", project: "project", thread: "thread",
+    media: "photos", thought: "thought", code: "code",
+    hackathon: "hackathon", milestone: "milestone",
+  };
 
   return (
-    <div className="home">
-      <Bento onOpen={onOpen} avatarStyle={avatarStyle} />
-
-      <div className="feed-head">
-        <div className="feed-title">
-          <h2 className="serif">{activeTag ? "filtered by" : "the feed"}</h2>
-          {activeTag && <span className="feed-tag mono">#{activeTag}</span>}
-          <Asterism />
-          <span className="feed-count mono">{filtered.length} posts</span>
+    <article className={"post2" + (post.pinned ? " post2-pinned" : "")}>
+      {post.pinned && (
+        <div className="post2-pinmark">
+          <Ico name="bookmark" style={{ width: 12, height: 12 }} /> Pinned
         </div>
-        <div className="feed-tools mono">
-          <button className="feed-tool feed-tool-on">grid</button>
-          <span>·</span>
-          <button className="feed-tool">list</button>
-          <span>·</span>
-          <button className="feed-tool">latest</button>
+      )}
+      <header className="post2-head">
+        <Av size={42} label="S" />
+        <div className="post2-id">
+          <div className="post2-id-row">
+            <span className="post2-name">Saiket Das</span>
+            <Verified />
+            <span className="post2-handle">@saiket.das</span>
+            <span className="post2-dot">·</span>
+            <span className="post2-when">{post.when}</span>
+          </div>
+          <span className="post2-kind">
+            {post.icon && <Ico name={post.icon} style={{ width: 11, height: 11 }} />}
+            {kindLabel[post.type] ?? post.type}
+          </span>
+        </div>
+        <button className="post2-overflow" aria-label="More"><Ico name="more" /></button>
+      </header>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <PostBody post={post} />
+      </div>
+
+      {post.tags.length > 0 && (
+        <div className="post2-tags">
+          {post.tags.map((t) => (
+            <button key={t} className="post2-tag" onClick={() => onTag(t)}>#{t}</button>
+          ))}
+        </div>
+      )}
+
+      <div className="post2-acts">
+        <button className={"post2-act" + (liked ? " liked" : "")} onClick={() => onLike(post.id)}>
+          <Ico name="heart" />
+          <span>{post.likes + (liked ? 1 : 0)}</span>
+        </button>
+        <button className="post2-act">
+          <Ico name="bubble" />
+          <span>{post.replies}</span>
+        </button>
+        <button className="post2-act">
+          <Ico name="share" />
+          <span>{post.shares}</span>
+        </button>
+        <button className={"post2-act" + (saved ? " saved" : "")} onClick={() => onSave(post.id)}>
+          <Ico name="bookmark" />
+        </button>
+      </div>
+    </article>
+  );
+}
+
+export function FeedPage({
+  likes, saves, onLike, onSave,
+}: {
+  likes: Record<string, boolean>;
+  saves: Record<string, boolean>;
+  onLike: (id: string) => void;
+  onSave: (id: string) => void;
+}) {
+  const [filter, setFilter] = useState("all");
+
+  const filtered = filter === "all"
+    ? FEED
+    : FEED.filter((p) => p.type === filter || (filter === "career" && p.type === "milestone"));
+
+  const pinned = filtered.filter((p) => p.pinned);
+  const rest   = filtered.filter((p) => !p.pinned);
+
+  const onTag = (t: string) => setFilter(t);
+
+  return (
+    <div className="feed-wrap">
+      <h1>Feed</h1>
+      <p className="feed-sub">Everything I've been up to — career updates, projects, thoughts, and photos in one timeline.</p>
+
+      <div className="composer">
+        <Av size={42} label="S" />
+        <div className="composer-text">
+          <span className="composer-text-line">What are you working on today?</span>
+          <div className="composer-acts">
+            <button className="composer-act"><Ico name="image" style={{ width: 13, height: 13 }} /> Photo</button>
+            <button className="composer-act"><Ico name="code" style={{ width: 13, height: 13 }} /> Code</button>
+            <button className="composer-act"><Ico name="layers" style={{ width: 13, height: 13 }} /> Project</button>
+            <button className="composer-act"><Ico name="briefcase" style={{ width: 13, height: 13 }} /> Update</button>
+          </div>
         </div>
       </div>
 
-      <div className={`feed feed-${density}`}>
-        {filtered.map((p) => (
-          <PostCard
-            key={p.id}
-            post={p}
-            density={density}
-            onOpen={onOpen}
-            onTag={(t) => onTag(t)}
+      <div className="feed-tabs">
+        {FILTERS.map((f) => (
+          <button key={f.k} className={"feed-tab" + (filter === f.k ? " on" : "")} onClick={() => setFilter(f.k)}>
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="feed2">
+        {[...pinned, ...rest].map((p) => (
+          <Post2
+            key={p.id} post={p} onTag={onTag}
+            liked={!!likes[p.id]} saved={!!saves[p.id]}
+            onLike={onLike} onSave={onSave}
           />
         ))}
       </div>

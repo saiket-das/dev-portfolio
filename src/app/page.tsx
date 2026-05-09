@@ -1,124 +1,73 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Sidebar } from "@/components/Sidebar";
+import { useState, useCallback, useEffect } from "react";
+import { Sidebar, TopBar, BotNav } from "@/components/Sidebar";
 import { RightRail } from "@/components/RightRail";
-import { HomePage } from "@/components/HomePage";
-import { PostDetailPage } from "@/components/PostDetail";
-import { MediaPage } from "@/components/MediaPage";
-import { AboutPage } from "@/components/AboutPage";
-import { ProjectsPage } from "@/components/ProjectsPage";
-import { WorkPage } from "@/components/WorkPage";
+import { FeedPage } from "@/components/HomePage";
+import { ExpPage } from "@/components/WorkPage";
+import { ProjPage } from "@/components/ProjectsPage";
+import { ChatPage } from "@/components/ChatPage";
+import { ProfPage } from "@/components/AboutPage";
 import { CommandPalette } from "@/components/CommandPalette";
-import { TweaksPanel, Tweaks } from "@/components/TweaksPanel";
 
-type Route = "home" | "feed" | "media" | "projects" | "work" | "about";
-
-const DEFAULTS: Tweaks = {
-  theme: "dark",
-  density: "regular",
-  card: "elevated",
-  fonts: "editorial",
-  handle: "monogram",
-  accent: "#dc8c4d",
-};
+type Tab = "feed" | "exp" | "proj" | "chat" | "profile";
 
 export default function Page() {
-  const [tweaks, setTweaksState] = useState<Tweaks>(DEFAULTS);
-  const [route, setRoute] = useState<Route>("home");
-  const [openId, setOpenId] = useState<string | null>(null);
-  const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [tab, setTab] = useState<Tab>("feed");
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [likes, setLikes] = useState<Record<string, boolean>>({});
+  const [saves, setSaves] = useState<Record<string, boolean>>({});
   const [cmdkOpen, setCmdkOpen] = useState(false);
 
-  const setTweak = useCallback((key: keyof Tweaks, val: string) => {
-    setTweaksState((prev) => ({ ...prev, [key]: val }));
-  }, []);
-
   useEffect(() => {
-    document.body.dataset.theme = tweaks.theme;
-    document.body.dataset.card = tweaks.card;
-    document.body.dataset.fonts = tweaks.fonts;
-    document.body.dataset.handle = tweaks.handle;
-    document.body.style.setProperty("--accent", tweaks.accent);
-    document.body.style.setProperty("--accent-2", tweaks.accent);
-  }, [tweaks]);
+    document.body.dataset.theme = theme;
+  }, [theme]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        setCmdkOpen((o) => !o);
+        e.preventDefault(); setCmdkOpen((o) => !o);
       }
-      if (e.key === "Escape") {
-        setCmdkOpen(false);
-        if (openId) setOpenId(null);
-      }
+      if (e.key === "Escape") setCmdkOpen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [openId]);
+  }, []);
 
-  const onNav = (k: string) => {
-    setOpenId(null);
-    setRoute(k as Route);
+  const navTo = useCallback((k: string) => {
+    setTab(k as Tab);
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-  const onOpen = (id: string) => {
-    setOpenId(id);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-  const onTag = (tag: string | null) => {
-    setActiveTag(tag);
-    setOpenId(null);
-    setRoute("home");
-  };
+  }, []);
 
-  let center;
-  if (openId) {
-    center = <PostDetailPage id={openId} onBack={() => setOpenId(null)} onTag={(t) => onTag(t)} />;
-  } else if (route === "home" || route === "feed") {
-    center = (
-      <HomePage
-        density={tweaks.density}
-        activeTag={activeTag}
-        onOpen={onOpen}
-        onTag={onTag}
-        avatarStyle={tweaks.handle}
-      />
-    );
-  } else if (route === "media") {
-    center = <MediaPage />;
-  } else if (route === "projects") {
-    center = <ProjectsPage onOpen={onOpen} />;
-  } else if (route === "work") {
-    center = <WorkPage />;
-  } else if (route === "about") {
-    center = <AboutPage avatarStyle={tweaks.handle} />;
-  }
+  const onLike = useCallback((id: string) => setLikes((p) => ({ ...p, [id]: !p[id] })), []);
+  const onSave = useCallback((id: string) => setSaves((p) => ({ ...p, [id]: !p[id] })), []);
+
+  let main;
+  if (tab === "feed")         main = <FeedPage likes={likes} saves={saves} onLike={onLike} onSave={onSave} />;
+  else if (tab === "exp")     main = <ExpPage />;
+  else if (tab === "proj")    main = <ProjPage />;
+  else if (tab === "chat")    main = <ChatPage />;
+  else if (tab === "profile") main = <ProfPage onTab={navTo} />;
 
   return (
-    <div className="app">
-      <Sidebar route={openId ? "" : route} onNav={onNav} onCmdK={() => setCmdkOpen(true)} avatarStyle={tweaks.handle} />
-      <main className="center">{center}</main>
-      <RightRail activeTag={activeTag} onTag={onTag} avatarStyle={tweaks.handle} />
+    <div className="app2">
+      <Sidebar tab={tab as Tab} onTab={(k) => navTo(k)} onCmdK={() => setCmdkOpen(true)} />
+      <main className="center2">
+        <TopBar tab={tab as Tab} onCmdK={() => setCmdkOpen(true)} />
+        {main}
+      </main>
+      <RightRail onTab={navTo} />
+      <BotNav tab={tab as Tab} onTab={(k) => navTo(k)} />
 
       <button
-        className="theme-fab"
-        onClick={() => setTweak("theme", tweaks.theme === "dark" ? "light" : "dark")}
+        className="fab"
+        onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
       >
-        <span className="theme-fab-dot" />
-        {tweaks.theme === "dark" ? "dark" : "light"}
+        <span style={{ width: 8, height: 8, borderRadius: "50%", background: "currentColor", display: "inline-block" }} />
+        {theme}
       </button>
 
-      <CommandPalette
-        open={cmdkOpen}
-        onClose={() => setCmdkOpen(false)}
-        onNav={onNav}
-        onOpen={onOpen}
-        onTag={(t) => onTag(t)}
-      />
-
-      <TweaksPanel tweaks={tweaks} setTweak={setTweak} />
+      <CommandPalette open={cmdkOpen} onClose={() => setCmdkOpen(false)} onNav={(k) => navTo(k)} />
     </div>
   );
 }

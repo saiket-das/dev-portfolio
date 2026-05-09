@@ -1,78 +1,100 @@
 "use client";
 
 import { PROFILE } from "@/lib/data";
-import { Icon, Avatar } from "./primitives";
+import { Ico, Av } from "./primitives";
 
-const NAV_ITEMS = [
-  { k: "home", label: "Index", icon: "home" },
-  { k: "feed", label: "Feed", icon: "feed" },
-  { k: "media", label: "Media", icon: "media" },
-  { k: "projects", label: "Projects", icon: "proj" },
-  { k: "work", label: "Work", icon: "work" },
-  { k: "about", label: "About", icon: "about" },
+type Tab = "feed" | "exp" | "proj" | "chat" | "profile";
+
+const NAV_ITEMS: { k: Tab; label: string; icon: string; badge?: string }[] = [
+  { k: "feed",    label: "Feed",       icon: "feed" },
+  { k: "exp",     label: "Experience", icon: "briefcase" },
+  { k: "proj",    label: "Projects",   icon: "layers" },
+  { k: "chat",    label: "Ask AI",     icon: "bot", badge: "new" },
+  { k: "profile", label: "Profile",    icon: "user" },
 ];
 
-export function Sidebar({
-  route,
-  onNav,
-  onCmdK,
-  avatarStyle,
-}: {
-  route: string;
-  onNav: (k: string) => void;
-  onCmdK: () => void;
-  avatarStyle: string;
-}) {
+export function Sidebar({ tab, onTab, onCmdK }: { tab: Tab; onTab: (k: Tab) => void; onCmdK: () => void }) {
   return (
-    <aside className="sidebar">
-      <div className="sb-brand">
-        <div className="sb-brand-mark serif">k.</div>
-        <div className="sb-brand-text">
-          <div className="sb-brand-name serif">{PROFILE.name}</div>
-          <div className="sb-brand-handle mono">{PROFILE.handle}</div>
+    <aside className="sb2">
+      <div className="sb2-id">
+        <Av size={48} label="S" />
+        <div>
+          <div className="sb2-name">{PROFILE.name}</div>
+          <div className="sb2-handle">{PROFILE.handle}</div>
         </div>
       </div>
 
-      <div className="sb-status mono">
-        <span className="sb-dot" />
-        <span>Available · May–Aug</span>
+      <div className="sb2-bio">{PROFILE.bio}</div>
+
+      <div className="sb2-status">
+        <span className="sb2-dot" />
+        <span>{PROFILE.status}</span>
       </div>
 
-      <nav className="sb-nav">
-        {NAV_ITEMS.map((it) => (
-          <button
-            key={it.k}
-            className={"sb-link" + (route === it.k ? " sb-link-on" : "")}
-            onClick={() => onNav(it.k)}
-          >
-            <Icon name={it.icon} />
-            <span className="serif">{it.label}</span>
-            {route === it.k && <span className="sb-tick">●</span>}
-          </button>
-        ))}
-      </nav>
-
-      <button className="sb-search mono" onClick={onCmdK}>
-        <Icon name="search" className="ico-xs" />
+      <button className="sb2-search" onClick={onCmdK}>
+        <Ico name="search" style={{ width: 15, height: 15 }} />
         <span>Search</span>
         <kbd>⌘K</kbd>
       </button>
 
-      <div className="sb-foot">
-        <div className="sb-foot-section mono">Elsewhere</div>
-        <div className="sb-foot-links">
-          {PROFILE.links.map((l) => (
-            <a key={l.kind} href={l.url} className="sb-foot-link mono">
-              <span className="sb-foot-arrow">↗</span>
-              {l.label}
+      <nav className="sb2-nav">
+        {NAV_ITEMS.map((it) => (
+          <button
+            key={it.k}
+            className={"sb2-link" + (tab === it.k ? " sb2-link-on" : "")}
+            onClick={() => onTab(it.k)}
+          >
+            <Ico name={it.icon} />
+            <span>{it.label}</span>
+            {it.badge && <span className="badge">{it.badge}</span>}
+          </button>
+        ))}
+      </nav>
+
+      <button className="sb2-resume">
+        <span>Download Resume</span>
+        <Ico name="resume" />
+      </button>
+
+      <div className="sb2-foot">
+        <div className="sb2-social">
+          {(["github","linkedin","ig","mail"] as const).map((k) => (
+            <a key={k} href="#" title={k} onClick={(e) => e.preventDefault()}>
+              <Ico name={k} />
             </a>
           ))}
         </div>
-        <div className="sb-foot-meta mono">
-          <span>v3.2 · {new Date().getFullYear()}</span>
-          <span>made in vim</span>
+        <div className="sb2-foot-meta">
+          <span>v2.0</span>
+          <span>© 2026</span>
         </div>
       </div>
     </aside>
+  );
+}
+
+export function TopBar({ tab, onCmdK }: { tab: Tab; onCmdK: () => void }) {
+  const titles: Record<Tab, string> = { feed: "Feed", exp: "Experience", proj: "Projects", chat: "Ask AI", profile: "Profile" };
+  return (
+    <div className="topbar">
+      <Av size={32} label="S" />
+      <h1>{titles[tab] ?? "Saiket"}</h1>
+      <button className="topbar-search" onClick={onCmdK}><Ico name="search" /></button>
+    </div>
+  );
+}
+
+export function BotNav({ tab, onTab }: { tab: Tab; onTab: (k: Tab) => void }) {
+  return (
+    <nav className="botnav">
+      <div className="botnav-inner">
+        {NAV_ITEMS.map((it) => (
+          <button key={it.k} className={tab === it.k ? "on" : ""} onClick={() => onTab(it.k)}>
+            <Ico name={it.icon} />
+            <span>{it.label}</span>
+          </button>
+        ))}
+      </div>
+    </nav>
   );
 }

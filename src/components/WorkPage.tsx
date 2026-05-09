@@ -1,96 +1,80 @@
 "use client";
 
 import { useState } from "react";
-import { EXPERIENCE } from "@/lib/data";
+import { EXPERIENCE, ExpEntry } from "@/lib/data";
 
-export function WorkPage() {
-  const [active, setActive] = useState(EXPERIENCE[0].id);
-  const job = EXPERIENCE.find((e) => e.id === active)!;
+const GROUPS = [
+  { k: "all",          label: "All" },
+  { k: "work",         label: "Work" },
+  { k: "education",    label: "Education" },
+  { k: "hackathons",   label: "Hackathons" },
+  { k: "leadership",   label: "Leadership" },
+  { k: "volunteering", label: "Volunteering" },
+];
+
+export function ExpPage() {
+  const [filt, setFilt] = useState("all");
+
+  const items: ExpEntry[] = filt === "all"
+    ? [
+        ...EXPERIENCE.work,
+        ...EXPERIENCE.education,
+        ...EXPERIENCE.hackathons,
+        ...EXPERIENCE.leadership,
+        ...EXPERIENCE.volunteering,
+      ]
+    : EXPERIENCE[filt] ?? [];
 
   return (
-    <div className="work">
-      <header className="work-head">
-        <div className="work-mark mono">/ WORK · CV · {EXPERIENCE.length} positions</div>
-        <h1 className="serif">Where I&apos;ve actually shown up.</h1>
-        <p className="work-lede">
-          Roles I&apos;ve held, in reverse chronological order. Click a row to expand the receipts.
-        </p>
-        <div className="work-summary mono">
-          <span><b className="serif">{EXPERIENCE.filter((e) => e.current).length}</b> currently active</span>
-          <span className="work-sep">·</span>
-          <span><b className="serif">{EXPERIENCE.filter((e) => !e.current).length}</b> archived</span>
-          <span className="work-sep">·</span>
-          <span>est. {EXPERIENCE[EXPERIENCE.length - 1].start.split(" ")[1]}</span>
-        </div>
-      </header>
-
-      <div className="work-grid">
-        <ol className="work-rail">
-          {EXPERIENCE.map((e, i) => (
-            <li
-              key={e.id}
-              className={"work-row" + (active === e.id ? " work-row-on" : "")}
-              onClick={() => setActive(e.id)}
-            >
-              <div className="work-row-rail">
-                <span className={`work-row-dot work-row-dot-${e.accent}`} />
-                {i < EXPERIENCE.length - 1 && <span className="work-row-line" />}
-              </div>
-              <div className="work-row-body">
-                <div className="work-row-head">
-                  <span className="work-row-co serif">{e.company}</span>
-                  {e.current && <span className="work-row-now mono">● now</span>}
-                </div>
-                <div className="work-row-role">{e.role}</div>
-                <div className="work-row-meta mono">
-                  <span>{e.start}</span>
-                  <span className="work-arrow">→</span>
-                  <span>{e.end}</span>
-                  <span className="work-row-sep">·</span>
-                  <span>{e.duration}</span>
-                  <span className="work-row-sep">·</span>
-                  <span>{e.kind}</span>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ol>
-
-        <aside className="work-detail">
-          <div className={`work-detail-card work-accent-${job.accent}`}>
-            <div className="work-detail-head">
-              <span className="work-detail-kind mono">{job.kind.toUpperCase()}</span>
-              <span className="work-detail-loc mono">{job.location}</span>
-            </div>
-            <h2 className="serif">{job.role}</h2>
-            <div className="work-detail-co serif">
-              at <em>{job.company}</em>
-            </div>
-            <div className="work-detail-dates mono">
-              {job.start} — {job.end} <span className="work-row-sep">·</span> {job.duration}
-            </div>
-
-            <p className="work-detail-summary">{job.summary}</p>
-
-            <div className="work-section-mark mono">⟶ what I did</div>
-            <ul className="work-bullets">
-              {job.bullets.map((b, i) => (
-                <li key={i}>
-                  <span className="work-bullet-num mono">0{i + 1}</span>
-                  <span>{b}</span>
-                </li>
-              ))}
-            </ul>
-
-            <div className="work-section-mark mono">⟶ stack</div>
-            <div className="work-stack">
-              {job.stack.map((s) => (
-                <span key={s} className="work-stack-i mono">{s}</span>
-              ))}
-            </div>
-          </div>
-        </aside>
+    <div className="exp-page">
+      <div className="exp-head">
+        <h1>Experience</h1>
+        <p>Roles, gigs, and the occasional hackathon trophy.</p>
       </div>
+
+      <div className="exp-tabs">
+        {GROUPS.map((g) => (
+          <button
+            key={g.k}
+            className={"exp-pill" + (filt === g.k ? " on" : "")}
+            onClick={() => setFilt(g.k)}
+          >
+            {g.label}
+          </button>
+        ))}
+      </div>
+
+      <ul className="tl2">
+        {items.map((it, i) => (
+          <li key={i} className="tl2-item">
+            <div className="tl2-rail">
+              <div className="tl2-dot" />
+              <div className="tl2-line" />
+            </div>
+            <div className="tl2-card">
+              <div className="tl2-row">
+                <span className="tl2-role">{it.role}</span>
+                {it.current && <span className="tl2-now">Now</span>}
+              </div>
+              <div className="tl2-co">{it.company}</div>
+              <div className="tl2-meta">
+                <span>{it.kind}</span><span className="sep">·</span>
+                <span>{it.loc}</span><span className="sep">·</span>
+                <span>{it.start} → {it.end}</span><span className="sep">·</span>
+                <span>{it.duration}</span>
+              </div>
+              <ul className="tl2-bullets">
+                {it.bullets.map((b, j) => <li key={j}>{b}</li>)}
+              </ul>
+              {it.stack.length > 0 && (
+                <div className="tl2-stack">
+                  {it.stack.map((s) => <span key={s}>{s}</span>)}
+                </div>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
