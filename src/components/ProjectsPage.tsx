@@ -11,22 +11,29 @@ export function ProjPage() {
         <p>Things I've shipped, in approximate order of pride.</p>
       </div>
       <div className="proj-list">
-        {PROJECTS.map((p) => (
-          <article key={p.id} className="proj-card">
+        {PROJECTS.map((p, i) => (
+          <article key={`${p.id}-${i}`} className="proj-card">
             <Ph label={p.cover} />
             <div className="proj-card-body">
               <div className="proj-card-row">
                 <span className="proj-card-name">{p.name}</span>
                 <span className="proj-card-year">{p.year}</span>
-                <span className="proj-card-status" data-s={p.status}>{p.status}</span>
+                <span className="proj-card-status" data-s={p.status}>
+                  {p.status}
+                </span>
               </div>
               <p className="proj-card-desc">{p.desc}</p>
               <div className="proj-card-bot">
                 <div className="proj-card-stack">
-                  {p.stack.map((s) => <span key={s}>{s}</span>)}
+                  {p.stack.map((s) => (
+                    <span key={s}>{s}</span>
+                  ))}
                 </div>
                 {p.metrics.map((m) => (
-                  <span key={m.k} className="proj-card-metric"><b>{m.v}</b>{m.k}</span>
+                  <span key={m.k} className="proj-card-metric">
+                    <b>{m.v}</b>
+                    {m.k}
+                  </span>
                 ))}
               </div>
             </div>

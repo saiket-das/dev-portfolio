@@ -14,9 +14,11 @@ function pickSources(q: string): string[] {
   const lc = q.toLowerCase();
   const out: string[] = [];
   if (/(stack|tech|language|skill|tool)/.test(lc)) out.push("Profile · Stack");
-  if (/(hackathon|treehacks|hack|prize|win)/.test(lc)) out.push("Experience · Hackathons");
+  if (/(hackathon|treehacks|hack|prize|win)/.test(lc))
+    out.push("Experience · Hackathons");
   if (/(project|build|loomshell|frame|atlas)/.test(lc)) out.push("Projects");
-  if (/(intern|work|job|role|career|plinth|moma|ta)/.test(lc)) out.push("Experience · Work");
+  if (/(intern|work|job|role|career|plinth|moma|ta)/.test(lc))
+    out.push("Experience · Work");
   if (/(photo|film|camera|pentax|dark)/.test(lc)) out.push("Profile · Hobbies");
   if (/(avail|hire|contract|free)/.test(lc)) out.push("Profile · Status");
   return out.slice(0, 3);
@@ -29,7 +31,8 @@ export function ChatPage() {
   const streamRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (streamRef.current) streamRef.current.scrollTop = streamRef.current.scrollHeight;
+    if (streamRef.current)
+      streamRef.current.scrollTop = streamRef.current.scrollHeight;
   }, [msgs, busy]);
 
   const send = async (text?: string) => {
@@ -41,7 +44,10 @@ export function ChatPage() {
     try {
       await new Promise((r) => setTimeout(r, 900 + Math.random() * 600));
       const reply = generateReply(q);
-      setMsgs((m) => [...m, { role: "ai", content: reply, sources: pickSources(q) }]);
+      setMsgs((m) => [
+        ...m,
+        { role: "ai", content: reply, sources: pickSources(q) },
+      ]);
     } finally {
       setBusy(false);
     }
@@ -56,23 +62,33 @@ export function ChatPage() {
             Ask Saiket&apos;s portfolio <Verified />
           </div>
           <div className="chat-head-sub">
-            <span className="chat-online" /> AI · grounded in this site&apos;s content
+            <span className="chat-online" /> AI · grounded in this site&apos;s
+            content
           </div>
         </div>
         {msgs.length > 0 && (
-          <button className="chat-clear" onClick={() => setMsgs([])}>Clear</button>
+          <button className="chat-clear" onClick={() => setMsgs([])}>
+            Clear
+          </button>
         )}
       </div>
 
       <div className="chat-stream" ref={streamRef}>
         {msgs.length === 0 ? (
           <div className="chat-empty">
-            <div className="chat-empty-mark"><Ico name="bot" /></div>
+            <div className="chat-empty-mark">
+              <Ico name="bot" />
+            </div>
             <h2>Ask anything about Saiket</h2>
-            <p>Grounded in this site&apos;s profile, projects, and experience. Try one of these:</p>
+            <p>
+              Grounded in this site&apos;s profile, projects, and experience.
+              Try one of these:
+            </p>
             <div className="chat-suggest">
               {CHAT_SUGGESTIONS.map((s) => (
-                <button key={s} onClick={() => send(s)}>{s}</button>
+                <button key={s} onClick={() => send(s)}>
+                  {s}
+                </button>
               ))}
             </div>
           </div>
@@ -85,7 +101,11 @@ export function ChatPage() {
                   <div className="chat-bubble-text">{m.content}</div>
                   {m.sources && m.sources.length > 0 && (
                     <div className="chat-source-row">
-                      {m.sources.map((s) => <span key={s} className="chat-source">↳ {s}</span>)}
+                      {m.sources.map((s) => (
+                        <span key={s} className="chat-source">
+                          ↳ {s}
+                        </span>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -98,7 +118,11 @@ export function ChatPage() {
             <div className="chat-bubble-row">
               <Av size={28} label="AI" />
               <div className="chat-bubble-text">
-                <div className="chat-typing"><i /><i /><i /></div>
+                <div className="chat-typing">
+                  <i />
+                  <i />
+                  <i />
+                </div>
               </div>
             </div>
           </div>
@@ -109,7 +133,9 @@ export function ChatPage() {
         {msgs.length > 0 && msgs.length < 6 && (
           <div className="chat-input-quick">
             {CHAT_SUGGESTIONS.slice(0, 4).map((s) => (
-              <button key={s} onClick={() => send(s)} disabled={busy}>{s}</button>
+              <button key={s} onClick={() => send(s)} disabled={busy}>
+                {s}
+              </button>
             ))}
           </div>
         )}
@@ -120,7 +146,10 @@ export function ChatPage() {
             placeholder="Ask about Saiket's work, stack, or availability…"
             rows={1}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                send();
+              }
             }}
           />
           <button
@@ -150,7 +179,11 @@ function generateReply(q: string): string {
     return `Saiket is joining Plinth Labs as a SWE Intern on the retrieval team (May–Aug 2026). Previously he was an install developer at MoMA PS1 and a TA for Algorithms at UMich.`;
   if (/(photo|film|camera)/.test(lc))
     return `Saiket shoots 35mm and medium format — mostly on a Pentax K1000. He develops his own film and has shot 11 weddings plus editorial work for music and literary magazines.`;
-  if (/(now|working|building)/.test(lc))
-    return `Right now: building ${PROFILE.now.building}, reading ${PROFILE.now.reading}, listening to ${PROFILE.now.listening}, and shooting ${PROFILE.now.shooting}.`;
+  if (/(now|working|building)/.test(lc)) {
+    const focus =
+      PROFILE.now.leaning ?? PROFILE.now.reading ?? PROFILE.now.listening ?? "";
+    const focusText = focus ? `, focusing on ${focus}` : "";
+    return `Right now: building ${PROFILE.now.building}${focusText}, and shooting ${PROFILE.now.shooting}.`;
+  }
   return `Saiket is a CS student at UMich (graduating May 2026), software developer, and film photographer. He builds dev tooling, ships open-source projects, and shoots 35mm. Ask me something more specific!`;
 }
