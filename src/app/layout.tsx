@@ -6,6 +6,13 @@ export const metadata: Metadata = {
   description: "Software Developer · Photographer · CS Student @UM",
 };
 
+// Explicit favicon entries (served from public/)
+export const icons = {
+  icon: "/favicon.png",
+  shortcut: "/favicon.png",
+  apple: "/favicon.png",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
