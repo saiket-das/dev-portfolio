@@ -1,11 +1,19 @@
 "use client";
 
-import { PROFILE, PROJECTS } from "@/lib/data";
+import { FEED, PROFILE, PROJECTS } from "@/lib/data";
 import { Ph } from "./primitives";
 
 type Tab = "feed" | "exp" | "proj" | "chat" | "profile";
 
 export function RightRail({ onTab }: { onTab: (k: Tab) => void }) {
+  const shipped = PROJECTS.length;
+  const rolls = FEED.filter((post) => post.type === "media").reduce(
+    (total, post) => total + (post.media?.length ?? 0),
+    0,
+  );
+  const stars = "1.0k";
+  const hackathons = FEED.filter((post) => post.type === "hackathon").length;
+
   return (
     <aside className="rail2">
       <div className="rcard">
@@ -38,19 +46,11 @@ export function RightRail({ onTab }: { onTab: (k: Tab) => void }) {
             more
           </button>
         </div>
-        <div className="stack-bars">
-          {PROFILE.stack.slice(0, 6).map((s) => (
-            <div key={s.tag} className="stack-bar">
-              <span className="stack-bar-name">{s.tag}</span>
-              <span className="stack-bar-track">
-                <i
-                  className="stack-bar-fill"
-                  style={{ width: `${s.weight * 100}%` }}
-                />
-              </span>
-              <span className="stack-bar-pct">
-                {Math.round(s.weight * 100)}
-              </span>
+        <div className="rail-stack-groups">
+          {PROFILE.stackSections.slice(0, 3).map((group) => (
+            <div key={group.label} className="rail-stack-group">
+              <div className="rail-stack-label">{group.label}</div>
+              <div className="rail-stack-items">{group.items.join(", ")}</div>
             </div>
           ))}
         </div>
@@ -62,19 +62,19 @@ export function RightRail({ onTab }: { onTab: (k: Tab) => void }) {
         </div>
         <div className="rstats">
           <div className="rstat">
-            <div className="rstat-v">23</div>
+            <div className="rstat-v">{shipped}</div>
             <div className="rstat-k">shipped</div>
           </div>
           <div className="rstat">
-            <div className="rstat-v">84</div>
+            <div className="rstat-v">{rolls}</div>
             <div className="rstat-k">rolls</div>
           </div>
           <div className="rstat">
-            <div className="rstat-v">1.0k</div>
+            <div className="rstat-v">{stars}</div>
             <div className="rstat-k">stars</div>
           </div>
           <div className="rstat">
-            <div className="rstat-v">3</div>
+            <div className="rstat-v">{hackathons}</div>
             <div className="rstat-k">hackathons</div>
           </div>
         </div>
@@ -85,10 +85,17 @@ export function RightRail({ onTab }: { onTab: (k: Tab) => void }) {
           <span>Featured</span>
         </div>
         <div className="feat-card">
-          <Ph label="loomshell / preview" />
+          <Ph
+            label={
+              PROFILE.featured?.cover ?? "/images/projects/smart-plug-hero.png"
+            }
+          />
           <div className="feat-meta">
-            <h4>{PROJECTS[0].name} v0.3</h4>
-            <p>{PROJECTS[0].desc}</p>
+            <h4>{PROFILE.featured?.project ?? PROJECTS[0].name}</h4>
+            <p>{PROFILE.featured?.preview ?? PROJECTS[0].desc}</p>
+            {PROFILE.featured ? (
+              <small>{PROFILE.featured.caption}</small>
+            ) : null}
           </div>
         </div>
       </div>

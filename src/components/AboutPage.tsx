@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { PROFILE, HEATMAP_WEEKS } from "@/lib/data";
+import { FEED, PROFILE, PROJECTS, HEATMAP_WEEKS } from "@/lib/data";
 import { Ico, Av, Verified } from "./primitives";
 
 const SUBS = [
@@ -72,13 +72,28 @@ export function ProfPage({ onTab }: { onTab: (k: string) => void }) {
   }, [ghUser, year, sub]);
   return (
     <div className="prof-page">
-      <div className="prof-cover">
+      <div
+        className="prof-cover"
+        style={
+          PROFILE.cover
+            ? {
+                backgroundImage: `url(${PROFILE.cover})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }
+            : undefined
+        }
+      >
         <div className="prof-cover-grid" />
       </div>
 
       <div className="prof-id">
         <div className="prof-id-row">
-          <Av size={104} label="S" />
+          <Av
+            size={104}
+            label={PROFILE.name ? PROFILE.name[0] : "S"}
+            src={(PROFILE as any).avatar}
+          />
           <div className="prof-id-text">
             <h1 className="prof-id-name">{PROFILE.name}</h1>
             <div className="prof-id-handle">
@@ -101,9 +116,23 @@ export function ProfPage({ onTab }: { onTab: (k: string) => void }) {
             <Ico name="cal" style={{ width: 14, height: 14 }} />{" "}
             {PROFILE.joined}
           </span>
-          <span>
+          <a
+            href={PROFILE.links.find((l) => l.kind === "link")?.url ?? "#"}
+            target={
+              PROFILE.links.find((l) => l.kind === "link")?.url &&
+              PROFILE.links.find((l) => l.kind === "link")?.url !== "#"
+                ? "_blank"
+                : undefined
+            }
+            rel={
+              PROFILE.links.find((l) => l.kind === "link")?.url &&
+              PROFILE.links.find((l) => l.kind === "link")?.url !== "#"
+                ? "noopener noreferrer"
+                : undefined
+            }
+          >
             <Ico name="link" style={{ width: 14, height: 14 }} /> saiketdas.dev
-          </span>
+          </a>
         </div>
         <div className="prof-counts">
           <span>
@@ -113,7 +142,16 @@ export function ProfPage({ onTab }: { onTab: (k: string) => void }) {
             <b>{PROFILE.following}</b> following
           </span>
           <span>
-            <b>23</b> shipped
+            <b>{PROJECTS.length}</b> shipped
+          </span>
+          <span>
+            <b>
+              {FEED.filter((post) => post.type === "media").reduce(
+                (total, post) => total + (post.media?.length ?? 0),
+                0,
+              )}
+            </b>
+            photos
           </span>
         </div>
       </div>
@@ -135,26 +173,19 @@ export function ProfPage({ onTab }: { onTab: (k: string) => void }) {
           <div className="prof-section">
             <h3>Pinned</h3>
             <div className="prof-pinned">
-              <div className="prof-pin">
-                <span className="prof-pin-mark">PROJECT</span>
-                <h4>Loomshell v0.3</h4>
-                <p>Multi-cam timelapse stitcher · 1.0k stars · Rust</p>
-              </div>
-              <div className="prof-pin">
-                <span className="prof-pin-mark">CASE STUDY</span>
-                <h4>An atlas of every frame</h4>
-                <p>CLIP search across 12k personal photos · 5-part thread</p>
-              </div>
-              <div className="prof-pin">
-                <span className="prof-pin-mark">HACKATHON</span>
-                <h4>FrameSync — TreeHacks &apos;26</h4>
-                <p>Top 8 / 312 · real-time roll preview</p>
-              </div>
-              <div className="prof-pin">
-                <span className="prof-pin-mark">CAREER</span>
-                <h4>Plinth Labs · Eng Intern</h4>
-                <p>Retrieval infra · May → Aug 2026</p>
-              </div>
+              {PROFILE.pinned?.map((pin) => (
+                <a
+                  key={pin.kind}
+                  className="prof-pin"
+                  href={pin.href ?? "#"}
+                  target={pin.href ? "_blank" : undefined}
+                  rel={pin.href ? "noopener noreferrer" : undefined}
+                >
+                  <span className="prof-pin-mark">{pin.kind}</span>
+                  <h4>{pin.title}</h4>
+                  <p>{pin.desc}</p>
+                </a>
+              ))}
             </div>
           </div>
 
@@ -185,20 +216,12 @@ export function ProfPage({ onTab }: { onTab: (k: string) => void }) {
 
       {sub === "stack" && (
         <div className="prof-section">
-          <h3>Languages &amp; tools</h3>
-          <div className="stack-bars">
-            {PROFILE.stack.map((s) => (
-              <div key={s.tag} className="stack-bar">
-                <span className="stack-bar-name">{s.tag}</span>
-                <span className="stack-bar-track">
-                  <i
-                    className="stack-bar-fill"
-                    style={{ width: `${s.weight * 100}%` }}
-                  />
-                </span>
-                <span className="stack-bar-pct">
-                  {Math.round(s.weight * 100)}
-                </span>
+          <h3>Stack</h3>
+          <div className="prof-stack-groups">
+            {PROFILE.stackSections.map((group) => (
+              <div key={group.label} className="prof-stack-group">
+                <div className="prof-stack-label">{group.label}</div>
+                <div className="prof-stack-items">{group.items.join(", ")}</div>
               </div>
             ))}
           </div>
@@ -319,7 +342,8 @@ export function ProfPage({ onTab }: { onTab: (k: string) => void }) {
                 key={l.kind}
                 href={l.url}
                 className="prof-link"
-                onClick={(e) => e.preventDefault()}
+                target={l.url && l.url !== "#" ? "_blank" : undefined}
+                rel={l.url && l.url !== "#" ? "noopener noreferrer" : undefined}
               >
                 <Ico name={l.kind} />
                 <span>{l.label}</span>

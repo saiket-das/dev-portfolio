@@ -500,6 +500,12 @@ h4 {
     var(--surface-2) 1px 14px
   );
 }
+.ph-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
 .ph-tag {
   position: absolute;
   bottom: 8px;
@@ -527,6 +533,20 @@ body[data-theme="light"] .ph-tag {
   color: white;
   font-weight: 600;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.av-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 999px;
+}
+
+/* ensure the decorative grid is hidden when a cover image is present */
+.prof-cover.has-cover .prof-cover-grid {
+  display: none;
 }
 
 /* ── feed page ── */
@@ -818,7 +838,100 @@ body[data-theme="light"] .ph-tag {
   border-radius: 0;
   aspect-ratio: auto;
   height: 100%;
-  min-height: 140px;
+  min-height: 100px;
+}
+.atch-media-photo {
+  width: 100%;
+  height: 100%;
+  min-height: 100px;
+  object-fit: cover;
+  display: block;
+}
+
+/* Support 5+ photos: use a two-column grid so extra images form rows */
+.atch-media[data-n="5"],
+.atch-media[data-n="6"],
+.atch-media[data-n="7"],
+.atch-media[data-n="8"] {
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: minmax(100px, auto);
+}
+
+.atch-media-item {
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+}
+.atch-media-item:focus {
+  outline: 2px solid var(--accent);
+}
+.atch-media-more {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.45);
+  color: white;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* Photo modal */
+.photo-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 9999;
+  padding: 24px;
+  box-sizing: border-box;
+}
+.photo-modal-inner {
+  width: min(92vw, 1200px);
+  height: min(86vh, 900px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  box-sizing: border-box;
+}
+.photo-modal-img {
+  max-width: calc(100vw - 160px);
+  max-height: calc(100vh - 160px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 6px;
+}
+.photo-modal-close {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  background: transparent;
+  color: white;
+  font-size: 28px;
+  border: 0;
+}
+.photo-modal-prev,
+.photo-modal-next {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.4);
+  color: white;
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  border: 0;
+  font-size: 28px;
+}
+.photo-modal-prev {
+  left: 18px;
+}
+.photo-modal-next {
+  right: 18px;
 }
 
 .atch-project {
@@ -1157,6 +1270,9 @@ body[data-theme="light"] .ph-tag {
     transform 0.2s,
     border-color 0.2s;
 }
+.proj-card-clickable {
+  cursor: pointer;
+}
 .proj-card:hover {
   border-color: var(--accent);
   transform: translateY(-2px);
@@ -1494,7 +1610,7 @@ body[data-theme="light"] .ph-tag {
   margin: 0 auto;
 }
 .prof-cover {
-  height: 180px;
+  height: 220px;
   position: relative;
   overflow: hidden;
   background: linear-gradient(
@@ -1503,6 +1619,11 @@ body[data-theme="light"] .ph-tag {
     var(--violet) 70%,
     var(--rose)
   );
+}
+
+/* ensure cover sits behind the profile ID block */
+.prof-cover {
+  z-index: 0;
 }
 .prof-cover-grid {
   position: absolute;
@@ -1514,7 +1635,13 @@ body[data-theme="light"] .ph-tag {
 }
 .prof-id {
   padding: 0 28px;
-  margin-top: -52px;
+  margin-top: -28px;
+}
+
+/* bring the profile ID (avatar + name) above the cover */
+.prof-id {
+  position: relative;
+  z-index: 3;
 }
 .prof-id-row {
   display: flex;
@@ -1631,6 +1758,10 @@ body[data-theme="light"] .ph-tag {
   border: 1px solid var(--line-soft);
   border-radius: var(--r-md);
   padding: 14px 16px;
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
   transition: border-color 0.15s;
 }
 .prof-pin:hover {
@@ -1652,6 +1783,39 @@ body[data-theme="light"] .ph-tag {
   color: var(--ink-mute);
   font-size: 12.5px;
   line-height: 1.45;
+}
+
+.prof-stack-groups {
+  display: grid;
+  gap: 12px;
+}
+.prof-stack-group,
+.rail-stack-group {
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line-soft);
+  background: var(--surface);
+}
+.prof-stack-label,
+.rail-stack-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.prof-stack-items,
+.rail-stack-items {
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.rail-stack-groups {
+  display: grid;
+  gap: 10px;
 }
 
 .prof-skills {
@@ -1740,24 +1904,30 @@ body[data-theme="light"] .ph-tag {
   display: flex;
   flex-direction: column;
   gap: 3px;
+
+  /* ensure avatar renders above cover and other nearby elements */
+  .av {
+    position: relative;
+    z-index: 4;
+  }
 }
 .heat-cell {
   width: 11px;
   height: 11px;
   border-radius: 2px;
-  background: var(--bg-2);
+  background: rgba(148, 163, 184, 0.14);
 }
 .heat-cell[data-l="1"] {
-  background: rgba(79, 140, 255, 0.2);
+  background: rgba(34, 197, 94, 0.22);
 }
 .heat-cell[data-l="2"] {
-  background: rgba(79, 140, 255, 0.45);
+  background: rgba(34, 197, 94, 0.38);
 }
 .heat-cell[data-l="3"] {
-  background: rgba(79, 140, 255, 0.72);
+  background: rgba(34, 197, 94, 0.58);
 }
 .heat-cell[data-l="4"] {
-  background: var(--accent);
+  background: rgba(74, 222, 128, 1);
 }
 .heat-foot {
   display: flex;

@@ -6,18 +6,30 @@ import { Ico, Av } from "./primitives";
 type Tab = "feed" | "exp" | "proj" | "chat" | "profile";
 
 const NAV_ITEMS: { k: Tab; label: string; icon: string; badge?: string }[] = [
-  { k: "feed",    label: "Feed",       icon: "feed" },
-  { k: "exp",     label: "Experience", icon: "briefcase" },
-  { k: "proj",    label: "Projects",   icon: "layers" },
-  { k: "chat",    label: "Ask AI",     icon: "bot", badge: "new" },
-  { k: "profile", label: "Profile",    icon: "user" },
+  { k: "feed", label: "Feed", icon: "feed" },
+  { k: "exp", label: "Experience", icon: "briefcase" },
+  { k: "proj", label: "Projects", icon: "layers" },
+  { k: "chat", label: "Ask AI", icon: "bot", badge: "WIP" },
+  { k: "profile", label: "Profile", icon: "user" },
 ];
 
-export function Sidebar({ tab, onTab, onCmdK }: { tab: Tab; onTab: (k: Tab) => void; onCmdK: () => void }) {
+export function Sidebar({
+  tab,
+  onTab,
+  onCmdK,
+}: {
+  tab: Tab;
+  onTab: (k: Tab) => void;
+  onCmdK: () => void;
+}) {
   return (
     <aside className="sb2">
       <div className="sb2-id">
-        <Av size={48} label="S" />
+        <Av
+          size={48}
+          label={PROFILE.name ? PROFILE.name[0] : "S"}
+          src={(PROFILE as any).avatar}
+        />
         <div>
           <div className="sb2-name">{PROFILE.name}</div>
           <div className="sb2-handle">{PROFILE.handle}</div>
@@ -58,11 +70,24 @@ export function Sidebar({ tab, onTab, onCmdK }: { tab: Tab; onTab: (k: Tab) => v
 
       <div className="sb2-foot">
         <div className="sb2-social">
-          {(["github","linkedin","ig","mail"] as const).map((k) => (
-            <a key={k} href="#" title={k} onClick={(e) => e.preventDefault()}>
-              <Ico name={k} />
-            </a>
-          ))}
+          {(["github", "linkedin", "ig", "mail"] as const).map((k) => {
+            const link = PROFILE.links.find((item) => item.kind === k);
+            return (
+              <a
+                key={k}
+                href={link?.url ?? "#"}
+                title={k}
+                target={link?.url && link.url !== "#" ? "_blank" : undefined}
+                rel={
+                  link?.url && link.url !== "#"
+                    ? "noopener noreferrer"
+                    : undefined
+                }
+              >
+                <Ico name={k} />
+              </a>
+            );
+          })}
         </div>
         <div className="sb2-foot-meta">
           <span>v2.0</span>
@@ -74,12 +99,20 @@ export function Sidebar({ tab, onTab, onCmdK }: { tab: Tab; onTab: (k: Tab) => v
 }
 
 export function TopBar({ tab, onCmdK }: { tab: Tab; onCmdK: () => void }) {
-  const titles: Record<Tab, string> = { feed: "Feed", exp: "Experience", proj: "Projects", chat: "Ask AI", profile: "Profile" };
+  const titles: Record<Tab, string> = {
+    feed: "Feed",
+    exp: "Experience",
+    proj: "Projects",
+    chat: "Ask AI",
+    profile: "Profile",
+  };
   return (
     <div className="topbar">
       <Av size={32} label="S" />
       <h1>{titles[tab] ?? "Saiket"}</h1>
-      <button className="topbar-search" onClick={onCmdK}><Ico name="search" /></button>
+      <button className="topbar-search" onClick={onCmdK}>
+        <Ico name="search" />
+      </button>
     </div>
   );
 }
@@ -89,7 +122,11 @@ export function BotNav({ tab, onTab }: { tab: Tab; onTab: (k: Tab) => void }) {
     <nav className="botnav">
       <div className="botnav-inner">
         {NAV_ITEMS.map((it) => (
-          <button key={it.k} className={tab === it.k ? "on" : ""} onClick={() => onTab(it.k)}>
+          <button
+            key={it.k}
+            className={tab === it.k ? "on" : ""}
+            onClick={() => onTab(it.k)}
+          >
             <Ico name={it.icon} />
             <span>{it.label}</span>
           </button>

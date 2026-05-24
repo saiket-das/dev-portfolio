@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FEED, FeedPost } from "@/lib/data";
 import { Ico, Av, Ph, Verified } from "./primitives";
 
@@ -15,11 +15,80 @@ const FILTERS = [
   { k: "thread", label: "Threads" },
 ];
 
-function PostBody({ post }: { post: FeedPost }) {
+const LINK_LABELS: Record<string, string> = {
+  "https://wattwise-technothon.netlify.app/": "Wattwise prototype",
+  "https://app.netlify.com/projects/healynx-clinic/overview": "Healynx clinic",
+  "https://healynx-patient.netlify.app/": "Healynx patient",
+  "https://p3d.in/63rIE/wireonshadeless+spin": "3D model",
+  "https://game-hub-lovat-two.vercel.app/": "GameHub demo",
+  "https://www.umtechnothon.com/": "UM Technothon",
+  "https://umdeeptech.com/": "UM Deep Tech",
+};
+
+function formatLinkLabel(raw: string) {
+  const normalized = raw.replace(/\/$/, "");
+  if (LINK_LABELS[raw] || LINK_LABELS[normalized]) {
+    return LINK_LABELS[raw] ?? LINK_LABELS[normalized];
+  }
+
+  if (normalized.startsWith("github/")) {
+    const repo = normalized.replace(/^github\//, "");
+    const repoName = repo.split("/").filter(Boolean).slice(-1)[0] ?? repo;
+    return `GitHub · ${repoName}`;
+  }
+
+  try {
+    const url = new URL(raw);
+    const host = url.hostname.replace(/^www\./, "");
+    const path = url.pathname.replace(/\/$/, "");
+
+    if (host === "github.com") {
+      const parts = path.split("/").filter(Boolean);
+      if (parts.length >= 2) return `${parts[0]}/${parts[1]}`;
+      return "GitHub";
+    }
+
+    if (path && path !== "/") {
+      const segments = path.split("/").filter(Boolean);
+      const lastSegment = segments[segments.length - 1] ?? "";
+      return `${host} · ${lastSegment}`;
+    }
+
+    return host;
+  } catch {
+    return raw;
+  }
+}
+
+function PostBody({
+  post,
+  onOpenPhoto,
+}: {
+  post: FeedPost;
+  onOpenPhoto?: (index: number) => void;
+}) {
+  const renderTextWithLinks = (text: string) => {
+    const parts = text.split(/(https?:\/\/[^\s]+)/g);
+    return parts.map((p, i) =>
+      /^https?:\/\//.test(p) ? (
+        <a key={i} href={p} target="_blank" rel="noopener noreferrer">
+          {formatLinkLabel(p)}
+        </a>
+      ) : (
+        p
+      ),
+    );
+  };
+  const maxVisible = 4;
+  const mediaCount = post.media ? post.media.length : 0;
+  const visibleMedia = post.media ? post.media.slice(0, maxVisible) : [];
+
   return (
     <>
       {post.title && <h3 className="post2-title">{post.title}</h3>}
-      {post.body && <p className="post2-body">{post.body}</p>}
+      {post.body && (
+        <p className="post2-body">{renderTextWithLinks(post.body)}</p>
+      )}
 
       {post.type === "code" && post.code && (
         <div className="atch-code">
@@ -34,10 +103,36 @@ function PostBody({ post }: { post: FeedPost }) {
       )}
 
       {post.type === "media" && post.media && (
-        <div className="atch-media" data-n={String(post.media.length)}>
-          {post.media.map((m, i) => (
-            <Ph key={i} label={m.label} />
-          ))}
+        <div
+          className="atch-media"
+          data-n={String(Math.min(mediaCount, maxVisible))}
+        >
+          {visibleMedia.map((m, i) =>
+            m.src ? (
+              <div
+                key={m.src}
+                className="atch-media-item"
+                onClick={() => onOpenPhoto?.(i)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === "Enter" && onOpenPhoto?.(i)}
+              >
+                <img
+                  className="atch-media-photo"
+                  src={m.src}
+                  alt={m.alt ?? m.label}
+                  loading="lazy"
+                />
+                {i === maxVisible - 1 && mediaCount > maxVisible && (
+                  <div className="atch-media-more">
+                    +{mediaCount - maxVisible}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Ph key={i} label={m.label} />
+            ),
+          )}
         </div>
       )}
 
@@ -64,20 +159,37 @@ function PostBody({ post }: { post: FeedPost }) {
             )}
             {post.project.links && (
               <div className="atch-project-links">
-                {post.project.links.map((l, i) => (
-                  <a
-                    key={`${l.k}-${i}`}
-                    className="atch-project-link"
-                    href="#"
-                    onClick={(e) => e.preventDefault()}
-                  >
-                    <Ico
-                      name={l.k === "github" ? "github" : "link"}
-                      style={{ width: 14, height: 14 }}
-                    />
-                    <span>{l.l}</span>
-                  </a>
-                ))}
+                {post.project.links.map((ln, i) => {
+                  const label = ln.l ?? "";
+                  let href = "#";
+                  if (
+                    label.startsWith("http://") ||
+                    label.startsWith("https://")
+                  ) {
+                    href = label;
+                  } else if (ln.k === "github" || label.startsWith("github/")) {
+                    const repo = label.replace(/^github\//, "");
+                    href = `https://github.com/${repo}`;
+                  } else {
+                    href = `https://www.google.com/search?q=${encodeURIComponent(label)}`;
+                  }
+
+                  return (
+                    <a
+                      key={`${ln.k}-${i}`}
+                      className="atch-project-link"
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Ico
+                        name={ln.k === "github" ? "github" : "link"}
+                        style={{ width: 14, height: 14 }}
+                      />
+                      <span>{formatLinkLabel(label)}</span>
+                    </a>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -164,6 +276,38 @@ function Post2({
     milestone: "milestone",
   };
 
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalIndex, setModalIndex] = useState(0);
+
+  useEffect(() => {
+    if (!modalOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (!post.media || post.media.length === 0) return;
+      if (e.key === "ArrowLeft") {
+        setModalIndex(
+          (mi) => (mi - 1 + post.media!.length) % post.media!.length,
+        );
+      } else if (e.key === "ArrowRight") {
+        setModalIndex((mi) => (mi + 1) % post.media!.length);
+      } else if (e.key === "Escape") {
+        setModalOpen(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [modalOpen, post.media]);
+
+  useEffect(() => {
+    // prevent background scrolling while modal is open
+    const prevOverflow = document.body.style.overflow;
+    if (modalOpen) {
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      document.body.style.overflow = prevOverflow || "";
+    };
+  }, [modalOpen]);
+
   return (
     <article className={"post2" + (post.pinned ? " post2-pinned" : "")}>
       {post.pinned && (
@@ -194,7 +338,13 @@ function Post2({
       </header>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        <PostBody post={post} />
+        <PostBody
+          post={post}
+          onOpenPhoto={(index) => {
+            setModalIndex(index);
+            setModalOpen(true);
+          }}
+        />
       </div>
 
       {post.tags.length > 0 && (
@@ -230,6 +380,51 @@ function Post2({
           <Ico name="bookmark" />
         </button>
       </div>
+      {modalOpen && post.media && post.media.length > 0 && (
+        <div
+          className="photo-modal"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setModalOpen(false);
+          }}
+        >
+          <button
+            className="photo-modal-close"
+            onClick={() => setModalOpen(false)}
+            aria-label="Close"
+          >
+            ×
+          </button>
+          <button
+            className="photo-modal-prev"
+            onClick={(e) => {
+              e.stopPropagation();
+              setModalIndex(
+                (mi) => (mi - 1 + post.media!.length) % post.media!.length,
+              );
+            }}
+            aria-label="Previous"
+          >
+            ‹
+          </button>
+          <div className="photo-modal-inner">
+            <img
+              src={post.media[modalIndex].src}
+              alt={post.media[modalIndex].alt ?? post.media[modalIndex].label}
+              className="photo-modal-img"
+            />
+          </div>
+          <button
+            className="photo-modal-next"
+            onClick={(e) => {
+              e.stopPropagation();
+              setModalIndex((mi) => (mi + 1) % post.media!.length);
+            }}
+            aria-label="Next"
+          >
+            ›
+          </button>
+        </div>
+      )}
     </article>
   );
 }

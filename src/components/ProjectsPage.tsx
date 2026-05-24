@@ -3,6 +3,12 @@
 import { PROJECTS } from "@/lib/data";
 import { Ph } from "./primitives";
 
+function openProjectLinks(project: (typeof PROJECTS)[number]) {
+  const primaryLink =
+    project.links.find((link) => link.k === "link") ?? project.links[0];
+  if (primaryLink) window.open(primaryLink.l, "_blank", "noopener,noreferrer");
+}
+
 export function ProjPage() {
   return (
     <div className="proj-page">
@@ -12,7 +18,19 @@ export function ProjPage() {
       </div>
       <div className="proj-list">
         {PROJECTS.map((p, i) => (
-          <article key={`${p.id}-${i}`} className="proj-card">
+          <article
+            key={`${p.id}-${i}`}
+            className="proj-card proj-card-clickable"
+            role="button"
+            tabIndex={0}
+            onClick={() => openProjectLinks(p)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                openProjectLinks(p);
+              }
+            }}
+          >
             <Ph label={p.cover} />
             <div className="proj-card-body">
               <div className="proj-card-row">

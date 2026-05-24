@@ -10,14 +10,32 @@ interface Msg {
   sources?: string[];
 }
 
+const replyCache = new Map<string, { content: string; sources: string[] }>();
+
+function normalizeQuery(q: string) {
+  return q.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function joinList(items: string[]) {
+  if (items.length === 0) return "";
+  if (items.length === 1) return items[0];
+  if (items.length === 2) return `${items[0]} and ${items[1]}`;
+  return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
+}
+
 function pickSources(q: string): string[] {
   const lc = q.toLowerCase();
   const out: string[] = [];
   if (/(stack|tech|language|skill|tool)/.test(lc)) out.push("Profile · Stack");
-  if (/(hackathon|treehacks|hack|prize|win)/.test(lc))
+  if (/(hackathon|deep tech|technothon|hack|prize|win)/.test(lc))
     out.push("Experience · Hackathons");
-  if (/(project|build|loomshell|frame|atlas)/.test(lc)) out.push("Projects");
-  if (/(intern|work|job|role|career|plinth|moma|ta)/.test(lc))
+  if (/(project|build|smart energy|zyra|healynx|gamehub|heritage)/.test(lc))
+    out.push("Projects");
+  if (
+    /(intern|work|job|role|career|infai|ajkermenu|moving image|volunteer)/.test(
+      lc,
+    )
+  )
     out.push("Experience · Work");
   if (/(photo|film|camera|pentax|dark)/.test(lc)) out.push("Profile · Hobbies");
   if (/(avail|hire|contract|free)/.test(lc)) out.push("Profile · Status");
@@ -42,12 +60,20 @@ export function ChatPage() {
     setMsgs((m) => [...m, { role: "user", content: q }]);
     setBusy(true);
     try {
-      await new Promise((r) => setTimeout(r, 900 + Math.random() * 600));
-      const reply = generateReply(q);
-      setMsgs((m) => [
-        ...m,
-        { role: "ai", content: reply, sources: pickSources(q) },
-      ]);
+      const key = normalizeQuery(q);
+      const cached = replyCache.get(key);
+      if (!cached) {
+        const reply = generateReply(q);
+        const sources = pickSources(q);
+        replyCache.set(key, { content: reply, sources });
+        await new Promise((r) => setTimeout(r, 180 + Math.random() * 180));
+        setMsgs((m) => [...m, { role: "ai", content: reply, sources }]);
+      } else {
+        setMsgs((m) => [
+          ...m,
+          { role: "ai", content: cached.content, sources: cached.sources },
+        ]);
+      }
     } finally {
       setBusy(false);
     }
@@ -168,22 +194,33 @@ export function ChatPage() {
 function generateReply(q: string): string {
   const lc = q.toLowerCase();
   if (/(stack|tech|language)/.test(lc))
-    return `Saiket's primary stack is TypeScript, Python, React, and Rust. He also works with Postgres, pgvector, ffmpeg, and WebGL. On the tools side: Neovim, Ghostty, and a well-loved Pentax K1000.`;
+    return `Saiket's core stack is ${joinList(
+      PROFILE.stack.slice(0, 12).map((s) => s.tag),
+    )}. On the tools side: Neovim, Ghostty, and a Pentax K1000.`;
   if (/(avail|hire|contract|intern)/.test(lc))
-    return `${PROFILE.status}. He's joining Plinth Labs as a SWE Intern (retrieval team) starting May 2026. For freelance photography, he's available year-round.`;
-  if (/(hackathon|treehacks|framesync)/.test(lc))
-    return `Top 8 / 312 at TreeHacks 2026 with FrameSync — a real-time roll preview tool for undeveloped 35mm film. Also won Best Hardware Hack at MHacks 2025 with DocketCam.`;
-  if (/(loomshell)/.test(lc))
-    return `Loomshell is a multi-cam timelapse stitcher with audio-reactive sync. Written in Rust, it hit 1.0k GitHub stars. Current version is v0.3 with 8.4k downloads.`;
-  if (/(intern|plinth|work|job)/.test(lc))
-    return `Saiket is joining Plinth Labs as a SWE Intern on the retrieval team (May–Aug 2026). Previously he was an install developer at MoMA PS1 and a TA for Algorithms at UMich.`;
+    return `${PROFILE.status}. His bio says he's available for internships and contract work.`;
+  if (/(hackathon|deep tech|technothon)/.test(lc))
+    return `His active hackathon work includes ${joinList(
+      EXPERIENCE.hackathons.map((h) => h.role),
+    )}. Healynx did not make finals, and Smart Energy Platform reached the preliminary round.`;
+  if (/(project|build|smart energy|zyra|healynx|gamehub|heritage)/.test(lc))
+    return `Recent projects include ${joinList(
+      PROJECTS.slice(0, 4).map((p) => p.name),
+    )}. The portfolio also includes GameHub and a 3D Colonial House archive.`;
+  if (
+    /(intern|work|job|role|career|infai|ajkermenu|moving image|volunteer)/.test(
+      lc,
+    )
+  )
+    return `Experience in the data includes Software Developer and Research Assistant at InfAI, Freelance Photographer, Software Developer at AjkerMenu, and Web Developer at The Moving Image.`;
   if (/(photo|film|camera)/.test(lc))
-    return `Saiket shoots 35mm and medium format — mostly on a Pentax K1000. He develops his own film and has shot 11 weddings plus editorial work for music and literary magazines.`;
+    return `He shoots travel, urban, portrait, and event photography. His listed hobbies include 35mm Film, Darkroom, Medium format, Cycling, Specialty coffee, Mech keyboards, Cooking, and Long walks.`;
   if (/(now|working|building)/.test(lc)) {
-    const focus =
-      PROFILE.now.leaning ?? PROFILE.now.reading ?? PROFILE.now.listening ?? "";
+    const focus = PROFILE.now.leaning ?? "";
     const focusText = focus ? `, focusing on ${focus}` : "";
     return `Right now: building ${PROFILE.now.building}${focusText}, and shooting ${PROFILE.now.shooting}.`;
   }
-  return `Saiket is a CS student at UMich (graduating May 2026), software developer, and film photographer. He builds dev tooling, ships open-source projects, and shoots 35mm. Ask me something more specific!`;
+  return `Saiket is a ${PROFILE.role}. Recent projects include ${joinList(
+    PROJECTS.slice(0, 4).map((p) => p.name),
+  )}. Ask about stack, projects, experience, or photography.`;
 }
