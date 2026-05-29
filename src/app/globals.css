@@ -939,8 +939,6 @@ body[data-theme="light"] .ph-tag {
   box-sizing: border-box;
 }
 .photo-modal-inner {
-  width: min(92vw, 1200px);
-  height: min(86vh, 900px);
   display: flex;
   align-items: center;
   justify-content: center;
