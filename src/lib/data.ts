@@ -124,7 +124,7 @@ export const PROFILE = {
   cover: "/images/profile/cover.jpg",
 
   featured: {
-    project: "Smart Energy Platform v0.3",
+    project: "Smart Energy Platform",
     preview:
       "Smart energy platform combining Sonoff S31 hardware, on-device NILM and anomaly detection, BLE pairing, live dashboards, predictive scheduling, AI chat, and a Community Grid for energy credits.",
     caption: "Smart plug project / preview",
@@ -267,7 +267,7 @@ export const FEED: FeedPost[] = [
       name: "Zyra",
       cover: "/images/projects/zyra-hero.png",
       desc: "AI-powered nutrition & fitness tracking app with fast meal logging, macro tracking, and personalised health insights.",
-      stack: ["React Native", "AI", "Firebase"],
+      stack: ["React Native", "AI", "Supabase"],
       links: [{ k: "github", l: "github/saiket-das/zyra" }],
     },
     tags: ["project", "ai", "health"],

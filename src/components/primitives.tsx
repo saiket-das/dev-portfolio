@@ -191,7 +191,11 @@ export function Av({
   return (
     <div
       className="av"
-      style={{ width: size, height: size, fontSize: size * 0.42 }}
+      style={{
+        width: `var(--prof-av-size, ${size}px)`,
+        height: `var(--prof-av-size, ${size}px)`,
+        fontSize: `calc(var(--prof-av-size, ${size}px) * 0.42)`,
+      }}
     >
       {src && src.startsWith("/") && imgOk ? (
         <img
