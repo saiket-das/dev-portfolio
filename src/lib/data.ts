@@ -21,7 +21,7 @@ export const PROFILE = {
     {
       kind: "linkedin",
       label: "in/saiket-das02",
-      url: "https://www.linkedin.com/in/saiket-das02/",
+      url: "https://www.linkedin.com/in/saiketdas/",
     },
     {
       kind: "ig",
@@ -155,7 +155,7 @@ export const PROFILE = {
       kind: "CAREER",
       title: "Software Developer · InfAI",
       desc: "Promoted from Research Assistant · retrieval and tooling work.",
-      href: "https://www.linkedin.com/in/saiket-das02/",
+      href: "https://www.linkedin.com/in/saiketdas/",
     },
   ],
 };
@@ -279,7 +279,7 @@ export const FEED: FeedPost[] = [
     id: "f15",
     type: "project",
     icon: "layers",
-    when: "2025",
+    when: "2026",
     title: "Healynx — UM Deep Tech",
     body: "Healynx: an AI-powered supplement checker combined with secure medical record storage to make healthcare smarter, safer, and easier to manage. Prototype and clinic/patient frontends available.",
     project: {
@@ -304,7 +304,7 @@ export const FEED: FeedPost[] = [
     id: "f16",
     type: "project",
     icon: "layers",
-    when: "2023",
+    when: "2025",
     title: "3D Colonial House — Badan Warisan Malaysia",
     body: "Digitally documented a colonial house in partnership with Badan Warisan Malaysia using 3D modelling to create a detailed archive preserving the building's architectural identity.",
     project: {
@@ -323,7 +323,7 @@ export const FEED: FeedPost[] = [
     id: "f17",
     type: "project",
     icon: "layers",
-    when: "2026",
+    when: "2023",
     title: "GameHub — Video Game Discovery",
     body: "GameHub is a video game discovery web app that helps you find new and interesting games to play.",
     project: {
