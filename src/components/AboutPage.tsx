@@ -49,7 +49,9 @@ export function ProfPage({ onTab }: { onTab: (k: string) => void }) {
     }
   }
   const ghUser = extractGithubUsername();
-  const [contribWeeks, setContribWeeks] = useState<any[] | null>(null);
+  const [contribWeeks, setContribWeeks] = useState<ContributionWeek[] | null>(
+    null,
+  );
   const [contribTotal, setContribTotal] = useState<number | null>(null);
   const [contribLoading, setContribLoading] = useState(false);
   const [contribError, setContribError] = useState<string | null>(null);
