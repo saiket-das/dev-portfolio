@@ -20,13 +20,22 @@ export default function Page() {
   const [cmdkOpen, setCmdkOpen] = useState(false);
 
   useEffect(() => {
+    const savedTheme = window.localStorage.getItem("theme");
+    if (savedTheme === "dark" || savedTheme === "light") {
+      setTheme(savedTheme);
+    }
+  }, []);
+
+  useEffect(() => {
     document.body.dataset.theme = theme;
+    window.localStorage.setItem("theme", theme);
   }, [theme]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault(); setCmdkOpen((o) => !o);
+        e.preventDefault();
+        setCmdkOpen((o) => !o);
       }
       if (e.key === "Escape") setCmdkOpen(false);
     };
@@ -39,19 +48,32 @@ export default function Page() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  const onLike = useCallback((id: string) => setLikes((p) => ({ ...p, [id]: !p[id] })), []);
-  const onSave = useCallback((id: string) => setSaves((p) => ({ ...p, [id]: !p[id] })), []);
+  const onLike = useCallback(
+    (id: string) => setLikes((p) => ({ ...p, [id]: !p[id] })),
+    [],
+  );
+  const onSave = useCallback(
+    (id: string) => setSaves((p) => ({ ...p, [id]: !p[id] })),
+    [],
+  );
 
   let main;
-  if (tab === "feed")         main = <FeedPage likes={likes} saves={saves} onLike={onLike} onSave={onSave} />;
-  else if (tab === "exp")     main = <ExpPage />;
-  else if (tab === "proj")    main = <ProjPage />;
-  else if (tab === "chat")    main = <ChatPage />;
+  if (tab === "feed")
+    main = (
+      <FeedPage likes={likes} saves={saves} onLike={onLike} onSave={onSave} />
+    );
+  else if (tab === "exp") main = <ExpPage />;
+  else if (tab === "proj") main = <ProjPage />;
+  else if (tab === "chat") main = <ChatPage />;
   else if (tab === "profile") main = <ProfPage onTab={navTo} />;
 
   return (
     <div className="app2">
-      <Sidebar tab={tab as Tab} onTab={(k) => navTo(k)} onCmdK={() => setCmdkOpen(true)} />
+      <Sidebar
+        tab={tab as Tab}
+        onTab={(k) => navTo(k)}
+        onCmdK={() => setCmdkOpen(true)}
+      />
       <main className="center2">
         <TopBar tab={tab as Tab} onCmdK={() => setCmdkOpen(true)} />
         {main}
@@ -63,11 +85,23 @@ export default function Page() {
         className="fab"
         onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
       >
-        <span style={{ width: 8, height: 8, borderRadius: "50%", background: "currentColor", display: "inline-block" }} />
+        <span
+          style={{
+            width: 8,
+            height: 8,
+            borderRadius: "50%",
+            background: "currentColor",
+            display: "inline-block",
+          }}
+        />
         {theme}
       </button>
 
-      <CommandPalette open={cmdkOpen} onClose={() => setCmdkOpen(false)} onNav={(k) => navTo(k)} />
+      <CommandPalette
+        open={cmdkOpen}
+        onClose={() => setCmdkOpen(false)}
+        onNav={(k) => navTo(k)}
+      />
     </div>
   );
 }

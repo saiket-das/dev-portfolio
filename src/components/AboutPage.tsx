@@ -4,6 +4,20 @@ import { useState, useEffect } from "react";
 import { FEED, PROFILE, PROJECTS, HEATMAP_WEEKS } from "@/lib/data";
 import { Ico, Av, Verified } from "./primitives";
 
+type ContributionWeek = {
+  date: string;
+  contributionCount: number;
+  color?: string;
+  weekday?: number;
+}[];
+
+type ContributionData = {
+  total: number | null;
+  weeks: ContributionWeek[] | null;
+};
+
+const contributionCache = new Map<string, ContributionData>();
+
 const SUBS = [
   { k: "about", label: "About" },
   { k: "stack", label: "Stack" },
@@ -40,13 +54,53 @@ export function ProfPage({ onTab }: { onTab: (k: string) => void }) {
   const [contribLoading, setContribLoading] = useState(false);
   const [contribError, setContribError] = useState<string | null>(null);
 
+  function applyContribData(data: ContributionData) {
+    setContribTotal(data.total);
+    setContribWeeks(data.weeks);
+  }
+
+  function handleYearSelect(nextYear: number) {
+    if (nextYear === year) return;
+    setYear(nextYear);
+
+    if (nextYear !== currentYear) {
+      const cached = contributionCache.get(`${ghUser ?? ""}:${nextYear}`);
+      if (cached) {
+        setContribLoading(false);
+        setContribError(null);
+        applyContribData(cached);
+        return;
+      }
+    }
+
+    setContribLoading(true);
+    setContribError(null);
+    setContribTotal(null);
+    setContribWeeks(null);
+  }
+
   useEffect(() => {
     if (!ghUser || sub !== "activity") return;
+    const cacheKey = `${ghUser}:${year}`;
+    const cached =
+      year !== currentYear ? contributionCache.get(cacheKey) : null;
+
+    if (cached) {
+      setContribLoading(false);
+      setContribError(null);
+      applyContribData(cached);
+      return;
+    }
+
+    const controller = new AbortController();
     setContribLoading(true);
     setContribError(null);
     setContribWeeks(null);
     setContribTotal(null);
-    fetch(`/api/contribs?user=${encodeURIComponent(ghUser)}&year=${year}`)
+
+    fetch(`/api/contribs?user=${encodeURIComponent(ghUser)}&year=${year}`, {
+      signal: controller.signal,
+    })
       .then(async (r) => {
         const txt = await r.text();
         if (!r.ok) {
@@ -61,15 +115,26 @@ export function ProfPage({ onTab }: { onTab: (k: string) => void }) {
         return JSON.parse(txt);
       })
       .then((data) => {
-        setContribTotal(typeof data.total === "number" ? data.total : null);
-        setContribWeeks(data.weeks || null);
+        const nextData = {
+          total: typeof data.total === "number" ? data.total : null,
+          weeks: data.weeks || null,
+        };
+        if (year !== currentYear) {
+          contributionCache.set(cacheKey, nextData);
+        }
+        applyContribData(nextData);
       })
       .catch((err) => {
+        if (err?.name === "AbortError") return;
         console.error("contribs fetch error", err);
         setContribError(err.message || String(err));
       })
-      .finally(() => setContribLoading(false));
-  }, [ghUser, year, sub]);
+      .finally(() => {
+        if (!controller.signal.aborted) setContribLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [ghUser, year, sub, currentYear]);
   return (
     <div className="prof-page">
       <div
@@ -257,7 +322,7 @@ export function ProfPage({ onTab }: { onTab: (k: string) => void }) {
                     key={y}
                     type="button"
                     className={y === year ? "on" : ""}
-                    onClick={() => setYear(y)}
+                    onClick={() => handleYearSelect(y)}
                   >
                     {y}
                   </button>
@@ -267,7 +332,27 @@ export function ProfPage({ onTab }: { onTab: (k: string) => void }) {
 
             {ghUser ? (
               <div>
-                {contribLoading && <div>Loading contributions…</div>}
+                {contribLoading && (
+                  <div className="prof-heat-skel" aria-busy="true">
+                    <div
+                      className="heat heat-lg prof-heat-skel-grid"
+                      aria-hidden="true"
+                    >
+                      {(contribWeeks ?? HEATMAP_WEEKS).map(
+                        (week, weekIndex) => (
+                          <div key={weekIndex} className="heat-week">
+                            {week.map((_, dayIndex) => (
+                              <div
+                                key={`${weekIndex}-${dayIndex}`}
+                                className="heat-cell prof-heat-skel-cell"
+                              />
+                            ))}
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  </div>
+                )}
                 {contribError && (
                   <div style={{ color: "var(--err)" }}>
                     Error loading contributions — showing GitHub image fallback.
@@ -282,9 +367,11 @@ export function ProfPage({ onTab }: { onTab: (k: string) => void }) {
                             key={`${w}-${d}`}
                             className="heat-cell"
                             title={`${day.contributionCount} — ${day.date}`}
-                            style={{
-                              backgroundColor: day.color || "transparent",
-                            }}
+                            style={
+                              day.contributionCount > 0
+                                ? { backgroundColor: day.color }
+                                : { backgroundColor: "var(--heat-zero)" }
+                            }
                             data-date={day.date}
                             data-count={day.contributionCount}
                           />
@@ -292,7 +379,7 @@ export function ProfPage({ onTab }: { onTab: (k: string) => void }) {
                       </div>
                     ))}
                   </div>
-                ) : (
+                ) : !contribLoading ? (
                   <div className="prof-gh-embed">
                     <img
                       src={`https://github.com/users/${ghUser}/contributions?from=${year}-01-01&to=${year}-12-31`}
@@ -300,7 +387,7 @@ export function ProfPage({ onTab }: { onTab: (k: string) => void }) {
                       style={{ width: "100%" }}
                     />
                   </div>
-                )}
+                ) : null}
               </div>
             ) : (
               <div className="heat heat-lg">
